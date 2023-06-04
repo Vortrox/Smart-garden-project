@@ -4,6 +4,9 @@ import os
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 DATABASE_PATH = os.path.join(PROJECT_ROOT, "smart_garden_data.db")
 LOG_FILE_PATH = os.path.join(PROJECT_ROOT, "debug.log")
+MINIMUM_DELAY_BETWEEN_NOTIFICATIONS = 21600  # seconds
+USER_EMAIL = ""
+DESTINATION_EMAIL = ""
 
 # Logging config
 logging.basicConfig(

@@ -3,6 +3,7 @@ import logging
 
 from flask import Flask, request
 
+from events import publish_observation
 from model import GardenObservation
 from persistence import write_observation
 
@@ -21,6 +22,9 @@ def receive_sensor_data():
         # Save data to database
         observation = GardenObservation(**smart_garden_data)
         write_observation(observation)
+
+        # Trigger hooks
+        publish_observation(observation)
 
         return {}, 201
     return {"error": "Request must be JSON"}, 415
