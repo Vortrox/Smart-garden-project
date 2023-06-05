@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Callable, Any
 from time import time, strftime
 import pandas as pd
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 from dateutil.tz import gettz
 from matplotlib.dates import DateFormatter
 
-from constants import USER_EMAIL, DESTINATION_EMAIL, MINIMUM_DELAY_BETWEEN_NOTIFICATIONS
+from constants import USER_EMAIL, DESTINATION_EMAIL, MINIMUM_DELAY_BETWEEN_NOTIFICATIONS, PROJECT_ROOT
 from emails import send_email
 from model import GardenObservation
 from persistence import get_last_24h
@@ -66,14 +67,14 @@ def daily_report(_):
         ax.xaxis.set_major_formatter(DateFormatter("%Y-%b-%d %H:%M:%S", tz=gettz()))
         plt.xticks(rotation=10)
         ax.set_ylabel(variable.capitalize())
-        plt.savefig(f"report_figures/{variable}.png", format="png")
+        plt.savefig(os.path.join(PROJECT_ROOT, f"report_figures/{variable}.png"), format="png")
 
     # Send email to user with all this information
     send_email(USER_EMAIL, DESTINATION_EMAIL,
                "Smart garden: Daily report",
                f"Sensor readings in the last 24h:\n{summary_df.to_markdown()}",
-               [f"report_figures/{v}.png" for v in sensor_variables])
     last_run_timestamp["daily_report"] = time()
+               [os.path.join(PROJECT_ROOT, f"report_figures/{v}.png") for v in sensor_variables])
 
 
 garden_events = []
