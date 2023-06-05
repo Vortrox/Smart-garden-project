@@ -40,7 +40,7 @@ def high_temperature_event(observation: GardenObservation):
 
 
 def low_humidity_event(observation: GardenObservation):
-    last_run_timestamp["high_temperature_event"] = time()
+    last_run_timestamp["low_humidity_event"] = time()
     logging.info("High temperature event detected")
     send_email(USER_EMAIL, DESTINATION_EMAIL,
                "Smart garden: High air temperature detected",
