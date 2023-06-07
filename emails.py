@@ -105,5 +105,5 @@ def send_email(user_email_addr: str, destination_email_addr: str, subject: str, 
 
 
 if __name__ == '__main__':
-    sent_email = send_email("vortrox117@gmail.com", "vortrox117@gmail.com", "Test email", "testing email api", ["image.png", "image.png", "image.png"])
+    sent_email = send_email(constants.USER_EMAIL, constants.DESTINATION_EMAIL, "Smart garden: Test email", "The backend system's emailing has been successfully configured")
     pass
