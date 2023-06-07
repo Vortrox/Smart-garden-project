@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from typing import List
+
 from constants import PROJECT_ROOT
 
 import base64
@@ -48,53 +50,60 @@ def get_credentials():
     return creds
 
 
-def send_email(user_email_addr: str, destination_email_addr: str, subject: str, message: str,
-               attachment_images=None) -> dict:
-    """Create and send an email message using Google's API"""
-
+def create_email(user_email_addr: str, destination_email_addr: str, subject: str, message: str,
+               attachment_images: List[str]=None) -> MIMEMultipart:
     if attachment_images is None:
         attachment_images = []
 
+    # Create a MIMEMultipart message object
+    email_messages = MIMEMultipart()
+
+    # Set the To, From, Subject, and other headers
+    email_messages['To'] = destination_email_addr
+    email_messages['From'] = user_email_addr
+    email_messages['Subject'] = subject
+
+    # Create a MIMEText object for the email body
+    text_part = MIMEText(message, 'plain')
+    email_messages.attach(text_part)
+
+    # Attach images as attachments
+    for image_file in attachment_images:
+        # Create a MIMEImage object for each image attachment
+        with open(image_file, 'rb') as file:
+            image_data = file.read()
+
+        image_mime_type, _ = mimetypes.guess_type(image_file)
+        image_name = os.path.basename(image_file)
+        image_part = MIMEImage(image_data, _subtype=image_mime_type)
+
+        # Set the filename for the image attachment
+        image_part.add_header('Content-Disposition', 'attachment', filename=image_name)
+
+        # Attach the encoded image data to the MIMEImage object
+        encoded_image = base64.b64encode(image_data).decode('utf-8')
+        image_part.set_payload(encoded_image)
+        encoders.encode_base64(image_part)
+
+        # Add the image attachment to the email
+        email_messages.attach(image_part)
+
+    return email_messages
+
+
+def send_email(user_email_addr: str, destination_email_addr: str, subject: str, message: str,
+               attachment_images: List[str]=None) -> dict:
+    """Create and send an email message using Google's API"""
+
     try:
-        # Create a MIMEMultipart message object
-        email_messages = MIMEMultipart()
-
-        # Set the To, From, Subject, and other headers
-        email_messages['To'] = destination_email_addr
-        email_messages['From'] = user_email_addr
-        email_messages['Subject'] = subject
-
-        # Create a MIMEText object for the email body
-        text_part = MIMEText(message, 'plain')
-        email_messages.attach(text_part)
-
-        # Attach images as attachments
-        for image_file in attachment_images:
-            # Create a MIMEImage object for each image attachment
-            with open(image_file, 'rb') as file:
-                image_data = file.read()
-
-            image_mime_type, _ = mimetypes.guess_type(image_file)
-            image_name = os.path.basename(image_file)
-            image_part = MIMEImage(image_data, _subtype=image_mime_type)
-
-            # Set the filename for the image attachment
-            image_part.add_header('Content-Disposition', 'attachment', filename=image_name)
-
-            # Attach the encoded image data to the MIMEImage object
-            encoded_image = base64.b64encode(image_data).decode('utf-8')
-            image_part.set_payload(encoded_image)
-            encoders.encode_base64(image_part)
-
-            # Add the image attachment to the email
-            email_messages.attach(image_part)
+        email_message = create_email(user_email_addr, destination_email_addr, subject, message, attachment_images)
 
         # Send the email using the Gmail API
         credentials = get_credentials()
         service = build('gmail', 'v1', credentials=credentials)
 
         request = service.users().messages().send(userId='me',
-                                                  body={'raw': base64.urlsafe_b64encode(email_messages.as_bytes()).decode()})
+                                                  body={'raw': base64.urlsafe_b64encode(email_message.as_bytes()).decode()})
         response = request.execute()
 
         logging.info('Email sent successfully.')
